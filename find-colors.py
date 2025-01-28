@@ -122,8 +122,11 @@ def draw_screen():
         screen.blit(next_button_text, (next_button_x + 20, next_button_y + 10))
 
     # Draw the "Quit" button
-    pygame.draw.rect(screen, (255, 0, 0), quit_button_rect)  # Red button
-    screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+    if not game_over:
+        pygame.draw.rect(screen, (255, 0, 0), quit_button_rect)  # Red button
+        screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+
+    # Update the display
     pygame.display.flip()
 
 
@@ -133,7 +136,7 @@ square_positions = generate_square_positions(num_choices)
 correct_color, square_colors = generate_squares(num_choices, previous_color)
 
 # Button variables
-button_width, button_height = 150, 50
+button_width, button_height = 200, 50
 
 # "Next" button
 next_button_x = WIDTH - button_width - 20
@@ -146,6 +149,12 @@ quit_button_x = WIDTH - button_width - 20
 quit_button_y = 20
 quit_button_rect = pygame.Rect(quit_button_x, quit_button_y, button_width, button_height)
 quit_button_text = button_font.render("Quit", True, (255, 255, 255))
+
+# "New Game" and "Exit Game" buttons
+new_game_button_rect = pygame.Rect(WIDTH // 2 - button_width - 10, HEIGHT // 2 + 50, button_width, button_height)
+new_game_button_text = button_font.render("New Game", True, (255, 255, 255))
+exit_game_button_rect = pygame.Rect(WIDTH // 2 + 10, HEIGHT // 2 + 50, button_width, button_height)
+exit_game_button_text = button_font.render("Exit Game", True, (255, 255, 255))
 
 # Main game loop
 running = True
@@ -165,18 +174,39 @@ while running:
         well_done_text = font.render("Well Done!", True, pygame.color.Color("gold"))
         screen.blit(well_done_text, (WIDTH // 2 - well_done_text.get_width() // 2, HEIGHT // 2 - 50))
         well_done_sound.play()  # Play well done sound
+        # Draw "New Game" and "Exit Game" buttons
+        pygame.draw.rect(screen, (0, 128, 0), new_game_button_rect)  # Green button
+        screen.blit(new_game_button_text, (new_game_button_rect.x + 10, new_game_button_rect.y + 10))
+        pygame.draw.rect(screen, (255, 0, 0), exit_game_button_rect)  # Red button
+        screen.blit(exit_game_button_text, (exit_game_button_rect.x + 10, exit_game_button_rect.y + 10))
         pygame.display.flip()
-        # wait for any key press
+
+        # Event handling for game over screen
         waiting = True
         while waiting:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    waiting = False
-                if event.type == pygame.KEYDOWN:
-                    waiting = False                                
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    waiting = False                                
-        running = False
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    if new_game_button_rect.collidepoint(x, y):
+                        # Reset the game
+                        result = None
+                        score = 0
+                        game_over = False
+                        previous_color = None
+                        correct_color, square_colors = generate_squares(num_choices, previous_color)
+                        title_sound.play()  # Play title sound for new game
+                        pygame.time.delay(600)
+                        sounds[correct_color].play()  # Play correct color sound at the title screen
+                        waiting = False
+                    elif exit_game_button_rect.collidepoint(x, y):
+                        running = False  # Exit the game
+                        waiting = False
+
+        # pygame.display.flip()
+        continue
+
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
