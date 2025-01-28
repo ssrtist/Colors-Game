@@ -29,8 +29,9 @@ button_font = pygame.font.Font(None, 50)
 # Sound effects
 pygame.mixer.init()
 sounds = {}
+title_sound = pygame.mixer.Sound("title.wav")      # Replace with your title sound file
 select_sound = pygame.mixer.Sound("select.wav")      # Replace with your wrong sound file
-correct_sound = pygame.mixer.Sound("correct.wav")  # Replace with your correct sound file
+correct_sound = pygame.mixer.Sound("right.wav")  # Replace with your correct sound file
 wrong_sound = pygame.mixer.Sound("wrong.wav")      # Replace with your wrong sound file
 sounds["red"] = pygame.mixer.Sound("red.wav")          # Replace with your red sound file
 sounds["green"] = pygame.mixer.Sound("green.wav")      # Replace with your green sound file
@@ -43,7 +44,7 @@ sounds["white"] = pygame.mixer.Sound("white.wav")      # Replace with your white
 
 # Game variables
 square_size = 100
-num_choices = 4  # Customizable number of choices
+num_choices = 2  # Customizable number of choices
 
 # Function to generate square positions dynamically
 def generate_square_positions(num_choices):
@@ -83,6 +84,36 @@ def generate_squares(num_choices, previous_color=None):
     random.shuffle(square_colors)  # Shuffle to randomize positions
     return correct_color, square_colors
 
+# 
+def draw_screen():
+#def draw_screen():
+    global correct_color, square_colors, square_positions, result, show_next_button
+    screen.fill((128, 128, 128))  # Grey background
+
+    # Display the color name to select
+    text = font.render(f"Find {correct_color.capitalize()}", True, (0, 0, 0))
+    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 50))
+
+    # Draw the squares
+    for i, pos in enumerate(square_positions):
+        pygame.draw.rect(screen, COLORS[square_colors[i]], (*pos, square_size, square_size))
+
+    # Display result
+    if result is not None:
+        result_text = font.render(result, True, pygame.Color("green" if result == "Right!" else "red"))
+        screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - 150))
+        show_next_button = True
+
+    # Draw the "Next" button if the round is over
+    if show_next_button:
+        pygame.draw.rect(screen, (0, 128, 0), next_button_rect)  # Green button
+        screen.blit(next_button_text, (next_button_x + 20, next_button_y + 10))
+
+    # Draw the "Quit" button
+    pygame.draw.rect(screen, (255, 0, 0), quit_button_rect)  # Red button
+    screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+
+
 # Initialize the first question
 previous_color = None
 square_positions = generate_square_positions(num_choices)
@@ -107,39 +138,17 @@ quit_button_text = button_font.render("Quit", True, (255, 255, 255))
 running = True
 result = None
 show_next_button = False
+# Play title sound at the beginning of the game
+draw_screen()
+pygame.display.flip()
+title_sound.play()
+pygame.time.delay(1000)  # Delay for 1 second
+sounds[correct_color].play()  # Play correct color sound at the title screen
+pygame.time.delay(1000)  # Delay for 2 seconds
+pygame.event.clear()  # Clear any lingering events
+
 while running:
-    screen.fill((128, 128, 128))  # Grey background
-
-    # Display the color name to select
-    text = font.render(f"Select {correct_color}", True, (0, 0, 0))
-    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 50))
-
-#    if result is None:
-#        # play title sound
-#        select_sound.play()  # Play the select sound effect
-#        pygame.time.delay(1000)  # Delay for 1 second
-#        sounds[correct_color].play()  # Play the correct color sound effect
-#        pygame.time.delay(1000)  # Delay for 1 second
-
-    # Draw the squares
-    for i, pos in enumerate(square_positions):
-        pygame.draw.rect(screen, COLORS[square_colors[i]], (*pos, square_size, square_size))
-
-    # Display result
-    if result is not None:
-        result_text = font.render(result, True, (0, 0, 0))
-        screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - 150))
-        show_next_button = True
-
-    # Draw the "Next" button if the round is over
-    if show_next_button:
-        pygame.draw.rect(screen, (0, 128, 0), next_button_rect)  # Green button
-        screen.blit(next_button_text, (next_button_x + 20, next_button_y + 10))
-
-    # Draw the "Quit" button
-    pygame.draw.rect(screen, (255, 0, 0), quit_button_rect)  # Red button
-    screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
-
+    draw_screen()
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -152,16 +161,20 @@ while running:
                 result = None
                 previous_color = correct_color
                 correct_color, square_colors = generate_squares(num_choices, previous_color)
-                select_sound.play()  # Play the select sound effect
-                pygame.time.wait(1000)  # Delay for 1 second
-                sounds[correct_color].play()  # Play the correct color sound effect
+                screen.fill((128, 128, 128))  # Grey background
+                draw_screen()
+                pygame.display.flip()
+                title_sound.play()  # Play title sound at the beginning of each round
+                pygame.time.delay(1000)  # Delay for 1 second
+                sounds[correct_color].play()  # Play correct color sound at the title screen
+                pygame.time.delay(1000)  # Delay for 1 second
             elif quit_button_rect.collidepoint(x, y):
                 running = False  # Quit the game
             else:
                 for i, pos in enumerate(square_positions):
                     if pos[0] <= x <= pos[0] + square_size and pos[1] <= y <= pos[1] + square_size:
                         if square_colors[i] == correct_color:
-                            result = "Correct!"
+                            result = "Right!"
                             correct_sound.play()  # Play correct sound effect
                             show_next_button = True
                         else:
