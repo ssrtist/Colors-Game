@@ -29,18 +29,24 @@ button_font = pygame.font.Font(None, 50)
 # Sound effects
 pygame.mixer.init()
 sounds = {}
-title_sound = pygame.mixer.Sound("title.wav")      # Replace with your title sound file
-select_sound = pygame.mixer.Sound("select.wav")      # Replace with your wrong sound file
-correct_sound = pygame.mixer.Sound("right.wav")  # Replace with your correct sound file
-wrong_sound = pygame.mixer.Sound("wrong.wav")      # Replace with your wrong sound file
-sounds["red"] = pygame.mixer.Sound("red.wav")          # Replace with your red sound file
-sounds["green"] = pygame.mixer.Sound("green.wav")      # Replace with your green sound file
-sounds["blue"] = pygame.mixer.Sound("blue.wav")        # Replace with your blue sound file
-sounds["yellow"] = pygame.mixer.Sound("yellow.wav")    # Replace with your yellow sound file
-sounds["purple"] = pygame.mixer.Sound("purple.wav")    # Replace with your purple sound file
-sounds["orange"] = pygame.mixer.Sound("orange.wav")    # Replace with your orange sound file
-sounds["black"] = pygame.mixer.Sound("black.wav")      # Replace with your black sound file
-sounds["white"] = pygame.mixer.Sound("white.wav")      # Replace with your white sound file
+title_sound = pygame.mixer.Sound("assets/title.wav")      # Replace with your title sound file
+select_sound = pygame.mixer.Sound("assets/select.wav")      # Replace with your wrong sound file
+correct_sound = pygame.mixer.Sound("assets/right.wav")  # Replace with your correct sound file
+wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      # Replace with your wrong sound file
+sounds["red"] = pygame.mixer.Sound("assets/red.wav")          # Replace with your red sound file
+sounds["green"] = pygame.mixer.Sound("assets/green.wav")      # Replace with your green sound file
+sounds["blue"] = pygame.mixer.Sound("assets/blue.wav")        # Replace with your blue sound file
+sounds["yellow"] = pygame.mixer.Sound("assets/yellow.wav")    # Replace with your yellow sound file
+sounds["purple"] = pygame.mixer.Sound("assets/purple.wav")    # Replace with your purple sound file
+sounds["orange"] = pygame.mixer.Sound("assets/orange.wav")    # Replace with your orange sound file
+sounds["black"] = pygame.mixer.Sound("assets/black.wav")      # Replace with your black sound file
+sounds["white"] = pygame.mixer.Sound("assets/white.wav")      # Replace with your white sound file
+
+# Emojis
+happy_face = pygame.image.load("assets/happy_face.png")  # Replace with your happy face image
+sad_face = pygame.image.load("assets/sad_face.png")      # Replace with your sad face image
+happy_face = pygame.transform.scale(happy_face, (200, 200))  # Resize if needed
+sad_face = pygame.transform.scale(sad_face, (200, 200))      # Resize if needed
 
 # Game variables
 square_size = 100
@@ -101,8 +107,13 @@ def draw_screen():
     # Display result
     if result is not None:
         result_text = font.render(result, True, pygame.Color("green" if result == "Right!" else "red"))
-        screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - 150))
+        screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - 50))
         show_next_button = True
+        # Display emoji based on result
+        if result == "Right!":
+            screen.blit(happy_face, (WIDTH // 2 - 100, HEIGHT // 2 + 50))
+        else:
+            screen.blit(sad_face, (WIDTH // 2 - 100, HEIGHT // 2 + 50))
 
     # Draw the "Next" button if the round is over
     if show_next_button:
