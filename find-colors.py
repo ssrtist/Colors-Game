@@ -25,6 +25,7 @@ COLOR_NAMES = list(COLORS.keys())
 # Fonts
 font = pygame.font.Font(None, 74)
 button_font = pygame.font.Font(None, 50)
+score_font = pygame.font.Font(None, 50)
 
 # Sound effects
 pygame.mixer.init()
@@ -33,6 +34,7 @@ title_sound = pygame.mixer.Sound("assets/title.wav")      # Replace with your ti
 select_sound = pygame.mixer.Sound("assets/select.wav")      # Replace with your wrong sound file
 correct_sound = pygame.mixer.Sound("assets/right.wav")  # Replace with your correct sound file
 wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      # Replace with your wrong sound file
+well_done_sound = pygame.mixer.Sound("assets/well_done.wav")  # Replace with your well done sound file
 sounds["red"] = pygame.mixer.Sound("assets/red.wav")          # Replace with your red sound file
 sounds["green"] = pygame.mixer.Sound("assets/green.wav")      # Replace with your green sound file
 sounds["blue"] = pygame.mixer.Sound("assets/blue.wav")        # Replace with your blue sound file
@@ -53,12 +55,14 @@ max_num_choices = 5 # Maximum number of choices
 num_choices = 2 # Customizable number of choices
 # square_size = 150
 square_size = WIDTH // max_num_choices - 10  # Square size based on max number of choices
+score = 0
+target_score = 10
+game_over = False
 
 # Function to generate square positions dynamically
 def generate_square_positions(num_choices):
     positions = []
-    # Dynamic layout for other numbers of choices
-    # spacing = 20  # Space between squares
+    # Dynamic layout for numbers of choices
     spacing = WIDTH // num_choices - square_size
     total_width = num_choices * square_size + (num_choices - 1) * spacing
     start_x = (WIDTH - total_width) // 2
@@ -87,9 +91,12 @@ def generate_squares(num_choices, previous_color=None):
 
 # 
 def draw_screen():
-#def draw_screen():
     global correct_color, square_colors, square_positions, result, show_next_button
     screen.fill((128, 128, 128))  # Grey background
+
+    # Display the score
+    score_text = score_font.render(f"Score: {score}", True, (0, 0, 0))
+    screen.blit(score_text, (20, 20))
 
     # Display the color name to select
     text = font.render(f"Find {correct_color.capitalize()}", True, (0, 0, 0))
@@ -103,7 +110,6 @@ def draw_screen():
     if result is not None:
         result_text = font.render(result, True, pygame.Color("green" if result == "Right!" else "red"))
         screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - 50))
-        # show_next_button = True
         # Display emoji based on result
         if result == "Right!":
             screen.blit(happy_face, (WIDTH // 2 - 100, HEIGHT // 2 + 50))
@@ -111,13 +117,14 @@ def draw_screen():
             screen.blit(sad_face, (WIDTH // 2 - 100, HEIGHT // 2 + 50))
 
     # Draw the "Next" button if the round is over
-    if show_next_button:
+    if show_next_button and not game_over:
         pygame.draw.rect(screen, (0, 128, 0), next_button_rect)  # Green button
         screen.blit(next_button_text, (next_button_x + 20, next_button_y + 10))
 
     # Draw the "Quit" button
     pygame.draw.rect(screen, (255, 0, 0), quit_button_rect)  # Red button
     screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+    pygame.display.flip()
 
 
 # Initialize the first question
@@ -144,17 +151,32 @@ quit_button_text = button_font.render("Quit", True, (255, 255, 255))
 running = True
 result = None
 show_next_button = False
-# Play title sound at the beginning of the game
 draw_screen()
-pygame.display.flip()
+# play title sound at the beginning of the game
 title_sound.play()
-pygame.time.delay(1000)  # Delay for 1 second
+pygame.time.delay(600)
 sounds[correct_color].play()  # Play correct color sound at the title screen
-pygame.time.delay(1000)  # Delay for 2 seconds
 pygame.event.clear()  # Clear any lingering events
 
 while running:
     draw_screen()
+    if game_over:
+        pygame.time.delay(1000)  # Delay for 1 second
+        well_done_text = font.render("Well Done!", True, pygame.color.Color("gold"))
+        screen.blit(well_done_text, (WIDTH // 2 - well_done_text.get_width() // 2, HEIGHT // 2 - 50))
+        well_done_sound.play()  # Play well done sound
+        pygame.display.flip()
+        # wait for any key press
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    waiting = False
+                if event.type == pygame.KEYDOWN:
+                    waiting = False                                
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    waiting = False                                
+        running = False
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -169,11 +191,10 @@ while running:
                 correct_color, square_colors = generate_squares(num_choices, previous_color)
                 screen.fill((128, 128, 128))  # Grey background
                 draw_screen()
-                pygame.display.flip()
+                #pygame.display.flip()
                 title_sound.play()  # Play title sound at the beginning of each round
-                pygame.time.delay(1000)  # Delay for 1 second
+                pygame.time.delay(600)
                 sounds[correct_color].play()  # Play correct color sound at the title screen
-                pygame.time.delay(1000)  # Delay for 1 second
             elif quit_button_rect.collidepoint(x, y):
                 running = False  # Quit the game
             else:
@@ -183,13 +204,14 @@ while running:
                             result = "Right!"
                             correct_sound.play()  # Play correct sound effect
                             show_next_button = True
+                            score += 1  # Increase score
+                            if score >= target_score:
+                                game_over = True
                         else:
                             result = "Wrong!"
                             wrong_sound.play()  # Play wrong sound effect
                             show_next_button = False
                         break
-
-    pygame.display.flip()
 
 # Quit pygame
 pygame.quit()
