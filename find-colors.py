@@ -5,7 +5,7 @@ import random
 pygame.init()
 
 # Screen dimensions
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1024, 768
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Color Selection Game")
 
@@ -16,7 +16,7 @@ COLORS = {
     "blue": (0, 0, 255),
     "yellow": (255, 255, 0),
     "purple": (128, 0, 128),
-    "orange": (255, 165, 0),
+    # "orange": (255, 165, 0),
     "black": (0, 0, 0),
     "white": (255, 255, 255),
 }
@@ -38,7 +38,7 @@ sounds["green"] = pygame.mixer.Sound("assets/green.wav")      # Replace with you
 sounds["blue"] = pygame.mixer.Sound("assets/blue.wav")        # Replace with your blue sound file
 sounds["yellow"] = pygame.mixer.Sound("assets/yellow.wav")    # Replace with your yellow sound file
 sounds["purple"] = pygame.mixer.Sound("assets/purple.wav")    # Replace with your purple sound file
-sounds["orange"] = pygame.mixer.Sound("assets/orange.wav")    # Replace with your orange sound file
+# sounds["orange"] = pygame.mixer.Sound("assets/orange.wav")    # Replace with your orange sound file
 sounds["black"] = pygame.mixer.Sound("assets/black.wav")      # Replace with your black sound file
 sounds["white"] = pygame.mixer.Sound("assets/white.wav")      # Replace with your white sound file
 
@@ -49,30 +49,25 @@ happy_face = pygame.transform.scale(happy_face, (200, 200))  # Resize if needed
 sad_face = pygame.transform.scale(sad_face, (200, 200))      # Resize if needed
 
 # Game variables
-square_size = 100
-num_choices = 2  # Customizable number of choices
+max_num_choices = 5 # Maximum number of choices
+num_choices = 2 # Customizable number of choices
+# square_size = 150
+square_size = WIDTH // max_num_choices - 10  # Square size based on max number of choices
 
 # Function to generate square positions dynamically
 def generate_square_positions(num_choices):
     positions = []
-    if num_choices == 4:
-        # Default layout for 4 choices
-        positions = [
-            (WIDTH // 4 - square_size // 2, HEIGHT // 2 - square_size // 2),
-            (3 * WIDTH // 4 - square_size // 2, HEIGHT // 2 - square_size // 2),
-            (WIDTH // 4 - square_size // 2, 3 * HEIGHT // 4 - square_size // 2),
-            (3 * WIDTH // 4 - square_size // 2, 3 * HEIGHT // 4 - square_size // 2),
-        ]
-    else:
-        # Dynamic layout for other numbers of choices
-        spacing = 20  # Space between squares
-        total_width = num_choices * square_size + (num_choices - 1) * spacing
-        start_x = (WIDTH - total_width) // 2
-        start_y = HEIGHT // 2 - square_size // 2
-        for i in range(num_choices):
-            x = start_x + i * (square_size + spacing)
-            y = start_y
-            positions.append((x, y))
+    # Dynamic layout for other numbers of choices
+    # spacing = 20  # Space between squares
+    spacing = WIDTH // num_choices - square_size
+    total_width = num_choices * square_size + (num_choices - 1) * spacing
+    start_x = (WIDTH - total_width) // 2
+    # start_y = HEIGHT // 2 - square_size // 2
+    start_y = HEIGHT // 2 - square_size
+    for i in range(num_choices):
+        x = start_x + i * (square_size + spacing)
+        y = start_y
+        positions.append((x, y))
     return positions
 
 # Function to generate squares with only one correct choice
@@ -108,7 +103,7 @@ def draw_screen():
     if result is not None:
         result_text = font.render(result, True, pygame.Color("green" if result == "Right!" else "red"))
         screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - 50))
-        show_next_button = True
+        # show_next_button = True
         # Display emoji based on result
         if result == "Right!":
             screen.blit(happy_face, (WIDTH // 2 - 100, HEIGHT // 2 + 50))
@@ -191,7 +186,7 @@ while running:
                         else:
                             result = "Wrong!"
                             wrong_sound.play()  # Play wrong sound effect
-                            show_next_button = True
+                            show_next_button = False
                         break
 
     pygame.display.flip()
