@@ -56,7 +56,6 @@ toggles["purple"] = True
 # toggles["orange"] = True
 toggles["black"] = True
 toggles["white"] = True
-print('black toggle: ' + str(toggles["black"]))
 
 # Emojis
 happy_face = pygame.image.load("assets/happy_face.png")  # Replace with your happy face image
@@ -210,6 +209,10 @@ def draw_screen():
     screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 50))
 
     # Draw the squares
+    if result is not None:
+        pygame.draw.rect(screen, "brown", (highlight_x - 10, highlight_y - 10, square_size + 20, square_size + 20),5)    
+        
+    # Draw the squares
     for i, pos in enumerate(square_positions):
         pygame.draw.rect(screen, COLORS[square_colors[i]], (*pos, square_size, square_size))
 
@@ -273,6 +276,7 @@ new_screen = True
 running = True
 result = None
 show_next_button = False
+highlight_x, highlight_y = 0, 0
 
 # Initialize the first question
 previous_color = None
@@ -284,7 +288,6 @@ pygame.event.clear()
 
 while running:
     if new_screen:
-        print(str(num_choices), ' of choices')
         draw_screen()
         new_screen = False
     if game_over:
@@ -343,17 +346,12 @@ while running:
             elif not show_next_button:
                 for i, pos in enumerate(square_positions):
                     if pos[0] <= x <= pos[0] + square_size and pos[1] <= y <= pos[1] + square_size:
+                        highlight_x, highlight_y = pos
                         if square_colors[i] == correct_color:
                             result = "Right!"
                             correct_sound.play()  # Play correct sound effect
                             show_next_button = True
                             score += 1  # Increase score
-                            # Display the score
-                            # first blank the score area
-                            pygame.draw.rect(screen, (128, 128, 128), (20, 20, 200, 50))
-                            score_text = score_font.render(f"Score: {score}", True, (0, 0, 0))
-                            screen.blit(score_text, (20, 20))
-                            pygame.display.flip()
                             if score >= target_score:
                                 game_over = True
                             if show_next_button and not game_over:
