@@ -74,54 +74,8 @@ score = 0
 target_score = 10
 game_over = False
 
-# Function to generate square positions dynamically
-def generate_square_positions(num_choices):
-    positions = []
-    # Dynamic layout for numbers of choices
-    spacing = WIDTH // num_choices - square_size
-    total_width = num_choices * square_size + (num_choices - 1) * spacing
-    start_x = (WIDTH - total_width) // 2
-    # start_y = HEIGHT // 2 - square_size // 2
-    start_y = HEIGHT // 2 - square_size
-    for i in range(num_choices):
-        x = start_x + i * (square_size + spacing)
-        y = start_y
-        positions.append((x, y))
-    return positions
-
-# Function to generate squares with only one correct choice
-def generate_squares(num_choices, previous_color=None):
-    # Ensure the new correct color is different from the previous one
-    if previous_color:
-        available_colors = [c for c in COLOR_NAMES if c != previous_color]
-        correct_color = random.choice(available_colors)
-    else:
-        correct_color = random.choice(COLOR_NAMES)
-    
-    # Ensure the correct color is only present once
-    incorrect_colors = random.sample([c for c in COLOR_NAMES if c != correct_color], num_choices - 1)  # Pick incorrect colors
-    square_colors = incorrect_colors + [correct_color]  # Combine incorrect and correct colors
-    random.shuffle(square_colors)  # Shuffle to randomize positions
-    return correct_color, square_colors
-
 def options_screen():
-    global num_choices
-
-    # Checkbox class
-    class Checkbox:
-        def __init__(self, x, y, color, size=20):
-            self.rect = pygame.Rect(x, y, size, size)
-            self.color = color
-            self.checked = False
-            self.border_width = 4  # Adjust this value to increase the border size
-
-        def draw(self, screen):
-            pygame.draw.rect(screen, self.color, self.rect, self.border_width)
-            if self.checked:
-                pygame.draw.rect(screen, self.color, self.rect.inflate(-4, -4))
-
-        def toggle(self):
-            self.checked = not self.checked
+    global num_choices, toggles
 
     # Draw checkboxes
     opt_rect = {}
@@ -132,10 +86,6 @@ def options_screen():
     i = 0
     for acolor in COLOR_NAMES:
         opt_rect[acolor] = pygame.Rect(i * opt_size * 1.25 + opt_x, opt_y, opt_size, opt_size)
-        # print(acolor, i)
-        # if toggles[acolor] == True:
-        #     checkboxes.append([Checkbox((i+1)*40 + 20, 50, acolor)])
-        #     print("checkbox: " + str((i+1)*40+20) + ", 50, " + acolor)
         i += 1
 
     # Event handling for options screen
@@ -187,6 +137,9 @@ def options_screen():
                 for acolor in COLOR_NAMES:
                     if opt_rect[acolor].collidepoint(x, y):
                         toggles[acolor] = not toggles[acolor]
+                        num_available_colors = list(toggles.values()).count(True)
+                        if num_available_colors < num_choices:
+                            toggles[acolor] = not toggles[acolor]
                 if quit_button_rect.collidepoint(x, y):
                     # Return to the title screen
                     return
@@ -303,6 +256,45 @@ def draw_screen():
         pygame.time.delay(500)
         sounds[correct_color].play()  # Play correct color sound at the title screen
 
+# Function to generate square positions dynamically
+def generate_square_positions(num_choices):
+    positions = []
+    # Dynamic layout for numbers of choices
+    spacing = WIDTH // num_choices - square_size
+    total_width = num_choices * square_size + (num_choices - 1) * spacing
+    start_x = (WIDTH - total_width) // 2
+    # start_y = HEIGHT // 2 - square_size // 2
+    start_y = HEIGHT // 2 - square_size
+    for i in range(num_choices):
+        x = start_x + i * (square_size + spacing)
+        y = start_y
+        positions.append((x, y))
+    return positions
+
+# Function to generate squares with only one correct choice
+def generate_squares(num_choices, previous_color=None):
+    print('generate_squares: ')
+    print(toggles)
+    print('COLOR_NAMES: ')
+    print(COLOR_NAMES)
+    really_available_colors = [c for c in COLOR_NAMES if toggles[c]]
+    print(really_available_colors)
+    # Ensure the new correct color is different from the previous one
+    # if previous_color:
+    #     available_colors = [c for c in COLOR_NAMES if c != previous_color]
+    #     correct_color = random.choice(available_colors)
+    # else:
+    #     correct_color = random.choice(COLOR_NAMES)
+    correct_color = random.choice(really_available_colors)
+
+
+    # Ensure the correct color is only present once
+    incorrect_colors = random.sample([c for c in really_available_colors if c != correct_color], num_choices - 1)  # Pick incorrect colors
+    print('incorrect_colors: ')
+    print(incorrect_colors)
+    square_colors = incorrect_colors + [correct_color]  # Combine incorrect and correct colors
+    random.shuffle(square_colors)  # Shuffle to randomize positions
+    return correct_color, square_colors
 
 # Button variables
 button_width, button_height = 200, 50
