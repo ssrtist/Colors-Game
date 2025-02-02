@@ -25,6 +25,17 @@ COLORS = {
 }
 COLOR_NAMES = list(COLORS.keys())
 
+# toggle options
+toggles = {}
+toggles["red"] = True
+toggles["green"] = True
+toggles["blue"] = True
+toggles["yellow"] = True
+toggles["purple"] = True
+# toggles["orange"] = True
+toggles["black"] = True
+toggles["white"] = True
+
 # Fonts
 font = pygame.font.Font(None, 74)
 button_font = pygame.font.Font(None, 50)
@@ -46,17 +57,6 @@ sounds["purple"] = pygame.mixer.Sound("assets/purple.wav")    # Replace with you
 # sounds["orange"] = pygame.mixer.Sound("assets/orange.wav")    # Replace with your orange sound file
 sounds["black"] = pygame.mixer.Sound("assets/black.wav")      # Replace with your black sound file
 sounds["white"] = pygame.mixer.Sound("assets/white.wav")      # Replace with your white sound file
-
-# toggle options
-toggles = {}
-toggles["red"] = True
-toggles["green"] = True
-toggles["blue"] = True
-toggles["yellow"] = True
-toggles["purple"] = True
-# toggles["orange"] = True
-toggles["black"] = True
-toggles["white"] = True
 
 # Emojis
 happy_face = pygame.image.load("assets/happy_face.png")  # Replace with your happy face image
@@ -107,6 +107,37 @@ def generate_squares(num_choices, previous_color=None):
 def options_screen():
     global num_choices
 
+    # Checkbox class
+    class Checkbox:
+        def __init__(self, x, y, color, size=20):
+            self.rect = pygame.Rect(x, y, size, size)
+            self.color = color
+            self.checked = False
+            self.border_width = 4  # Adjust this value to increase the border size
+
+        def draw(self, screen):
+            pygame.draw.rect(screen, self.color, self.rect, self.border_width)
+            if self.checked:
+                pygame.draw.rect(screen, self.color, self.rect.inflate(-4, -4))
+
+        def toggle(self):
+            self.checked = not self.checked
+
+    # Draw checkboxes
+    opt_rect = {}
+    opt_size = 50
+    opt_width = 4
+    opt_x = (WIDTH - opt_size * 1.25 * len(COLOR_NAMES)) // 2
+    opt_y = HEIGHT // 2 + 100
+    i = 0
+    for acolor in COLOR_NAMES:
+        opt_rect[acolor] = pygame.Rect(i * opt_size * 1.25 + opt_x, opt_y, opt_size, opt_size)
+        # print(acolor, i)
+        # if toggles[acolor] == True:
+        #     checkboxes.append([Checkbox((i+1)*40 + 20, 50, acolor)])
+        #     print("checkbox: " + str((i+1)*40+20) + ", 50, " + acolor)
+        i += 1
+
     # Event handling for options screen
     waiting = True
     while waiting:
@@ -141,7 +172,6 @@ def options_screen():
         pygame.draw.rect(screen, (128, 0, 0), quit_button_rect)  # Green button
         screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
 
-        pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # Return to the title screen
@@ -154,9 +184,21 @@ def options_screen():
                 if minus_button_rect.collidepoint(x, y):
                     # Decrease the number of choices
                     num_choices = max(num_choices - 1, 2)
+                for acolor in COLOR_NAMES:
+                    if opt_rect[acolor].collidepoint(x, y):
+                        toggles[acolor] = not toggles[acolor]
                 if quit_button_rect.collidepoint(x, y):
                     # Return to the title screen
                     return
+        # Draw option checkboxes
+        for acolor in COLOR_NAMES:
+            pygame.draw.rect(screen, acolor, opt_rect[acolor], opt_width)
+            if toggles[acolor]:
+                # draw smaller box
+                pygame.draw.rect(screen, acolor, opt_rect[acolor].inflate(-4, -4))
+
+        pygame.display.flip()
+        clock.tick(30)
 #
 def title_screen():
     global running
@@ -208,6 +250,7 @@ def title_screen():
                 if quit_button_rect.collidepoint(x, y):
                     pygame.quit()
                     sys.exit()
+        clock.tick(30)
 # 
 def draw_screen():
     global correct_color, square_colors, square_positions, result, show_next_button
