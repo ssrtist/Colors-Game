@@ -241,9 +241,9 @@ def draw_screen():
 
     # Play sounds
     if not show_next_button:
-        pygame.time.delay(1000)  # Delay for 1 second
+        pygame.time.delay(250)  # Delay for 1 second
         title_sound.play()  # Play title sound at the beginning of each round
-        pygame.time.delay(600)
+        pygame.time.delay(500)
         sounds[correct_color].play()  # Play correct color sound at the title screen
 
 
@@ -318,6 +318,7 @@ while running:
                         game_over = False
                         previous_color = None
                         correct_color, square_colors = generate_squares(num_choices, previous_color)
+                        show_next_button = False
                         waiting = False
                     elif exit_game_button_rect.collidepoint(x, y):
                         running = False  # Exit the game
