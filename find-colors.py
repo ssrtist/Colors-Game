@@ -1,14 +1,15 @@
 import sys
 import pygame
 import random
-import time
 
 # Initialize pygame
 pygame.init()
+clock = pygame.time.Clock()
 
 # Screen dimensions
 WIDTH, HEIGHT = 1024, 768
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+# screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Color Selection Game")
 
 # Colors
@@ -130,11 +131,20 @@ def options_screen():
         minus_button_text = button_font.render("-", True, (255, 255, 255))
         pygame.draw.rect(screen, (128, 0, 0), minus_button_rect)  # Red button
         screen.blit(minus_button_text, (minus_button_x + 20, minus_button_y + 10))
+
+        # Draw "Back" button
+        button_width, button_height = 200, 50
+        quit_button_x = WIDTH // 2 - button_width // 2
+        quit_button_y = HEIGHT // 2 + 50 + 150
+        quit_button_rect = pygame.Rect(quit_button_x, quit_button_y, button_width, button_height)
+        quit_button_text = button_font.render("Back", True, (255, 255, 255))
+        pygame.draw.rect(screen, (128, 0, 0), quit_button_rect)  # Green button
+        screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                # title_screen()
-                # waiting = False
+                # Return to the title screen
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
@@ -144,6 +154,9 @@ def options_screen():
                 if minus_button_rect.collidepoint(x, y):
                     # Decrease the number of choices
                     num_choices = max(num_choices - 1, 2)
+                if quit_button_rect.collidepoint(x, y):
+                    # Return to the title screen
+                    return
 #
 def title_screen():
     global running
@@ -240,7 +253,8 @@ def draw_screen():
     pygame.display.flip()
 
     # Play sounds
-    if not show_next_button:
+    # if not show_next_button:
+    if result is None:
         pygame.time.delay(250)  # Delay for 1 second
         title_sound.play()  # Play title sound at the beginning of each round
         pygame.time.delay(500)
@@ -365,6 +379,7 @@ while running:
                             show_next_button = False
                         break
                 new_screen = True
+    clock.tick(30)
 
 # Quit pygame
 pygame.quit()
