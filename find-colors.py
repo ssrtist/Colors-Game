@@ -22,6 +22,7 @@ COLORS = {
     # "orange": (255, 165, 0),
     "black": (0, 0, 0),
     "white": (255, 255, 255),
+    "pink": (255, 182, 193)
 }
 COLOR_NAMES = list(COLORS.keys())
 
@@ -29,12 +30,13 @@ COLOR_NAMES = list(COLORS.keys())
 toggles = {}
 toggles["red"] = True
 toggles["green"] = True
-toggles["blue"] = True
-toggles["yellow"] = True
-toggles["purple"] = True
+toggles["blue"] = False
+toggles["yellow"] = False
+toggles["purple"] = False
 # toggles["orange"] = True
-toggles["black"] = True
+toggles["black"] = False
 toggles["white"] = True
+toggles["pink"] = False
 
 # Fonts
 font = pygame.font.Font(None, 74)
@@ -44,25 +46,27 @@ score_font = pygame.font.Font(None, 50)
 # Sound effects
 pygame.mixer.init()
 sounds = {}
-title_sound = pygame.mixer.Sound("assets/title.wav")      # Replace with your title sound file
-select_sound = pygame.mixer.Sound("assets/select.wav")      # Replace with your wrong sound file
-correct_sound = pygame.mixer.Sound("assets/right.wav")  # Replace with your correct sound file
-wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      # Replace with your wrong sound file
-well_done_sound = pygame.mixer.Sound("assets/well_done.wav")  # Replace with your well done sound file
-sounds["red"] = pygame.mixer.Sound("assets/red.wav")          # Replace with your red sound file
-sounds["green"] = pygame.mixer.Sound("assets/green.wav")      # Replace with your green sound file
-sounds["blue"] = pygame.mixer.Sound("assets/blue.wav")        # Replace with your blue sound file
-sounds["yellow"] = pygame.mixer.Sound("assets/yellow.wav")    # Replace with your yellow sound file
-sounds["purple"] = pygame.mixer.Sound("assets/purple.wav")    # Replace with your purple sound file
-# sounds["orange"] = pygame.mixer.Sound("assets/orange.wav")    # Replace with your orange sound file
-sounds["black"] = pygame.mixer.Sound("assets/black.wav")      # Replace with your black sound file
-sounds["white"] = pygame.mixer.Sound("assets/white.wav")      # Replace with your white sound file
+title_sound = pygame.mixer.Sound("assets/title.wav")    
+select_sound = pygame.mixer.Sound("assets/select.wav")  
+correct_sound = pygame.mixer.Sound("assets/right.wav")  
+wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      
+well_done_sound = pygame.mixer.Sound("assets/well_done.wav")
+click_sound = pygame.mixer.Sound("assets/mouse_click.wav")
+sounds["red"] = pygame.mixer.Sound("assets/red.wav")        
+sounds["green"] = pygame.mixer.Sound("assets/green.wav")    
+sounds["blue"] = pygame.mixer.Sound("assets/blue.wav")      
+sounds["yellow"] = pygame.mixer.Sound("assets/yellow.wav")  
+sounds["purple"] = pygame.mixer.Sound("assets/purple.wav")  
+# sounds["orange"] = pygame.mixer.Sound("assets/orange.wav")
+sounds["black"] = pygame.mixer.Sound("assets/black.wav")    
+sounds["white"] = pygame.mixer.Sound("assets/white.wav")    
+sounds["pink"] = pygame.mixer.Sound("assets/pink.wav")      
 
 # Emojis
-happy_face = pygame.image.load("assets/happy_face.png")  # Replace with your happy face image
-sad_face = pygame.image.load("assets/sad_face.png")      # Replace with your sad face image
-happy_face = pygame.transform.scale(happy_face, (200, 200))  # Resize if needed
-sad_face = pygame.transform.scale(sad_face, (200, 200))      # Resize if needed
+happy_face = pygame.image.load("assets/happy_face.png") 
+sad_face = pygame.image.load("assets/sad_face.png")     
+happy_face = pygame.transform.scale(happy_face, (200, 200))  
+sad_face = pygame.transform.scale(sad_face, (200, 200))      
 
 # Game variables
 max_num_choices = 5 # Maximum number of choices
@@ -113,13 +117,13 @@ def options_screen():
         pygame.draw.rect(screen, (128, 0, 0), minus_button_rect)  # Red button
         screen.blit(minus_button_text, (minus_button_x + 20, minus_button_y + 10))
 
-        # Draw "Back" button
+        # Draw "OK" button
         button_width, button_height = 200, 50
         quit_button_x = WIDTH // 2 - button_width // 2
         quit_button_y = HEIGHT // 2 + 50 + 150
         quit_button_rect = pygame.Rect(quit_button_x, quit_button_y, button_width, button_height)
-        quit_button_text = button_font.render("Back", True, (255, 255, 255))
-        pygame.draw.rect(screen, (128, 0, 0), quit_button_rect)  # Green button
+        quit_button_text = button_font.render("OK", True, (255, 255, 255))
+        pygame.draw.rect(screen, (0, 128, 0), quit_button_rect)  # Green button
         screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
 
         for event in pygame.event.get():
@@ -130,18 +134,22 @@ def options_screen():
                 x, y = event.pos
                 if plus_button_rect.collidepoint(x, y):
                     # Increase the number of choices
+                    click_sound.play()
                     num_choices = min(num_choices + 1, max_num_choices)
                 if minus_button_rect.collidepoint(x, y):
                     # Decrease the number of choices
+                    click_sound.play()
                     num_choices = max(num_choices - 1, 2)
                 for acolor in COLOR_NAMES:
                     if opt_rect[acolor].collidepoint(x, y):
+                        click_sound.play()
                         toggles[acolor] = not toggles[acolor]
                         num_available_colors = list(toggles.values()).count(True)
                         if num_available_colors < num_choices:
                             toggles[acolor] = not toggles[acolor]
                 if quit_button_rect.collidepoint(x, y):
                     # Return to the title screen
+                    click_sound.play()
                     return
         # Draw option checkboxes
         for acolor in COLOR_NAMES:
@@ -196,11 +204,14 @@ def title_screen():
                 x, y = event.pos
                 if start_button_rect.collidepoint(x, y):
                     # Proceed to the next round
+                    click_sound.play()
                     return True
                 if option_button_rect.collidepoint(x, y):
                     # Switch to options screen
+                    click_sound.play()
                     options_screen()
                 if quit_button_rect.collidepoint(x, y):
+                    click_sound.play()
                     pygame.quit()
                     sys.exit()
         clock.tick(30)
@@ -362,6 +373,7 @@ while running:
                     x, y = event.pos
                     if new_game_button_rect.collidepoint(x, y):
                         # Reset the game
+                        click_sound.play()
                         result = None
                         score = 0
                         game_over = False
@@ -370,6 +382,7 @@ while running:
                         show_next_button = False
                         waiting = False
                     elif exit_game_button_rect.collidepoint(x, y):
+                        click_sound.play()
                         running = False  # Exit the game
                         waiting = False
 
@@ -385,6 +398,7 @@ while running:
             x, y = event.pos
             if show_next_button and next_button_rect.collidepoint(x, y):
                 # Proceed to the next round
+                click_sound.play()
                 show_next_button = False
                 result = None
                 previous_color = correct_color
@@ -392,6 +406,7 @@ while running:
                 screen.fill((128, 128, 128))  # Grey background
                 new_screen = True
             elif quit_button_rect.collidepoint(x, y):
+                click_sound.play()
                 running = False  # Quit the game
             elif not show_next_button:
                 for i, pos in enumerate(square_positions):
