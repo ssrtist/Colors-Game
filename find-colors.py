@@ -40,6 +40,7 @@ toggles["pink"] = False
 
 # Fonts
 font = pygame.font.Font(None, 74)
+big_font = pygame.font.Font(None, 96)
 button_font = pygame.font.Font(None, 50)
 score_font = pygame.font.Font(None, 50)
 
@@ -64,7 +65,7 @@ sounds["pink"] = pygame.mixer.Sound("assets/pink.wav")
 
 # Emojis
 happy_face = pygame.image.load("assets/happy_face.png") 
-sad_face = pygame.image.load("assets/sad_face.png")     
+sad_face = pygame.image.load("assets/red_sad_face.png")     
 happy_face = pygame.transform.scale(happy_face, (200, 200))  
 sad_face = pygame.transform.scale(sad_face, (200, 200))      
 
@@ -170,6 +171,8 @@ def title_screen():
         # Display the title screen
         screen.fill((128, 128, 128))  # Grey background
         title_text = font.render("Color Selection Game", True, (0, 0, 0))
+        # title_rect = pygame.Rect(WIDTH // 2 - title_text.get_width() // 2 - 2, HEIGHT // 2 - 50 - 2 , title_text.get_width() + 4, title_text.get_height() + 4)
+        # pygame.draw.rect(screen, "gold", title_rect, 2)
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 2 - 50))
         # Draw "Start" button
         button_width, button_height = 200, 50
@@ -225,8 +228,10 @@ def draw_screen():
     screen.blit(score_text, (20, 20))
 
     # Display the color name to select
-    text = font.render(f"Find {correct_color.capitalize()}", True, (0, 0, 0))
-    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 50))
+    game_text = font.render(f"Find {correct_color.capitalize()}", True, "black")
+    game_rect = pygame.Rect(WIDTH // 2 - game_text.get_width() // 2 - 2, 50 - 2, game_text.get_width() + 4, game_text.get_height() + 4)
+    pygame.draw.rect(screen, "gold", game_rect.inflate(0, 0))
+    screen.blit(game_text, (WIDTH // 2 - game_text.get_width() // 2, 50))
 
     # Draw the squares
     if result is not None:
@@ -238,10 +243,10 @@ def draw_screen():
 
     # Display result
     if result is not None:
-        result_text = font.render(result, True, pygame.Color("green" if result == "Right!" else "red"))
-        screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - 50))
+        result_text = big_font.render(result, True, pygame.Color("green" if result == "RIGHT !" else "red"))
+        screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - HEIGHT // 9))
         # Display emoji based on result
-        if result == "Right!":
+        if result == "RIGHT !":
             screen.blit(happy_face, (WIDTH // 2 - 100, HEIGHT // 2 + 50))
         else:
             screen.blit(sad_face, (WIDTH // 2 - 100, HEIGHT // 2 + 50))
@@ -266,6 +271,7 @@ def draw_screen():
         title_sound.play()  # Play title sound at the beginning of each round
         pygame.time.delay(500)
         sounds[correct_color].play()  # Play correct color sound at the title screen
+    return game_rect
 
 # Function to generate square positions dynamically
 def generate_square_positions(num_choices):
@@ -348,7 +354,7 @@ pygame.event.clear()
 
 while running:
     if new_screen:
-        draw_screen()
+        find_color_rect = draw_screen()
         new_screen = False
     if game_over:
         pygame.time.delay(1000)  # Delay for 1 second
@@ -396,6 +402,12 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
+            # if find_color_rect.collidepoint(x, y):
+            #     print(find_color_rect)
+                # pygame.time.delay(250)  # Delay for 1 second
+                # title_sound.play()  # Play title sound at the beginning of each round
+                # pygame.time.delay(500)
+                # sounds[correct_color].play()  # Play correct color sound at the title screen
             if show_next_button and next_button_rect.collidepoint(x, y):
                 # Proceed to the next round
                 click_sound.play()
@@ -413,7 +425,7 @@ while running:
                     if pos[0] <= x <= pos[0] + square_size and pos[1] <= y <= pos[1] + square_size:
                         highlight_x, highlight_y = pos
                         if square_colors[i] == correct_color:
-                            result = "Right!"
+                            result = "RIGHT !"
                             correct_sound.play()  # Play correct sound effect
                             show_next_button = True
                             score += 1  # Increase score
@@ -424,7 +436,7 @@ while running:
                                 screen.blit(next_button_text, (next_button_x + 20, next_button_y + 10))
                                 pygame.display.flip()
                         else:
-                            result = "Wrong!"
+                            result = "WRONG !"
                             wrong_sound.play()  # Play wrong sound effect
                             show_next_button = False
                         break
