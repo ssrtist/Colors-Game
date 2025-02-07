@@ -115,23 +115,27 @@ def options_screen():
         title_text = font.render("Options", True, (0, 0, 0))
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 50))
         # Display the current number of choices
-        choices_text = font.render(f"Number of choices: {num_choices}", True, (0, 0, 0))
-        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT // 2 - 50))
+        choices_text = button_font.render(f"Number of choices: {num_choices}", True, "white")
+        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT * 2 // 5 - 50))
         # Draw "+" button
         button_width, button_height = 50, 50
         plus_button_x = WIDTH // 2 - button_width // 2 + 50
-        plus_button_y = HEIGHT // 2
+        plus_button_y = HEIGHT * 2 // 5
         plus_button_rect = pygame.Rect(plus_button_x, plus_button_y, button_width, button_height)
         plus_button_text = button_font.render("+", True, (255, 255, 255))
         pygame.draw.rect(screen, (0, 128, 0), plus_button_rect)  # Green button
         screen.blit(plus_button_text, (plus_button_x + 20, plus_button_y + 10))
         # Draw "-" button
         minus_button_x = WIDTH // 2 - button_width // 2 - 50
-        minus_button_y = HEIGHT // 2
+        minus_button_y = HEIGHT * 2 // 5
         minus_button_rect = pygame.Rect(minus_button_x, minus_button_y, button_width, button_height)
         minus_button_text = button_font.render("-", True, (255, 255, 255))
         pygame.draw.rect(screen, (128, 0, 0), minus_button_rect)  # Red button
         screen.blit(minus_button_text, (minus_button_x + 20, minus_button_y + 10))
+
+        # Color checkboxes
+        choices_text = button_font.render("Available colors: ", True, "white")
+        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT // 2 + 50))
 
         # Draw "OK" button
         button_width, button_height = 200, 50
@@ -160,7 +164,6 @@ def options_screen():
                     if opt_rect[acolor].collidepoint(x, y):
                         click_sound.play()
                         color_items[acolor]["toggle"] = not color_items[acolor]["toggle"]
-                        # num_available_colors = list(toggles.values()).count(True)
                         num_available_colors = sum(1 for item in color_items.values() if item["toggle"])
                         if num_available_colors < num_choices:
                             color_items[acolor]["toggle"] = not color_items[acolor]["toggle"]
@@ -305,14 +308,9 @@ def generate_square_positions(num_choices):
 # Function to generate squares with only one correct choice
 def generate_squares(num_choices):
     really_available_colors = [c for c in COLOR_NAMES if color_items[c]["toggle"]]
-    print(really_available_colors)
     correct_color = random.choice(really_available_colors)
-
-
     # Ensure the correct color is only present once
     incorrect_colors = random.sample([c for c in really_available_colors if c != correct_color], num_choices - 1)  # Pick incorrect colors
-    print('incorrect_colors: ')
-    print(incorrect_colors)
     square_colors = incorrect_colors + [correct_color]  # Combine incorrect and correct colors
     random.shuffle(square_colors)  # Shuffle to randomize positions
     return correct_color, square_colors
@@ -406,11 +404,7 @@ while running:
             x, y = event.pos
             # logic for audio prompt when clicking on the title
             # if find_color_rect.collidepoint(x, y):
-                # print(find_color_rect)
-                # pygame.time.delay(250)  # Delay for 1 second
                 # title_sound.play()  # Play title sound at the beginning of each round
-                # pygame.time.delay(500)
-                # sounds[correct_color].play()  # Play correct color sound at the title screen
             if show_next_button and next_button_rect.collidepoint(x, y):
                 # Proceed to the next round
                 click_sound.play()
