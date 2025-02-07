@@ -6,37 +6,61 @@ import random
 pygame.init()
 clock = pygame.time.Clock()
 
+color_items = {}
+color_items = {
+    "red": { 
+        "value" : (255, 0, 0),
+        "sound" : pygame.mixer.Sound("assets/red.wav"),
+        "toggle" : True
+    },
+    "green": { 
+        "value" : (0, 255, 0),
+        "sound" : pygame.mixer.Sound("assets/green.wav"),
+        "toggle" : True
+    },
+    "blue": { 
+        "value" : (0, 0, 255),
+        "sound" : pygame.mixer.Sound("assets/blue.wav"),
+        "toggle" : False
+    },
+    "yellow": { 
+        "value" : (255, 255, 0),
+        "sound" : pygame.mixer.Sound("assets/yellow.wav"),
+        "toggle" : False
+    },
+    "purple": { 
+        "value" : (128, 0, 128),
+        "sound" : pygame.mixer.Sound("assets/purple.wav"),
+        "toggle" : False
+    },
+    # "orange": {
+    #     "value" : (255, 165, 0),
+    #     "sound" : pygame.mixer.Sound("assets/orange.wav"),
+    #     "toggle" : True
+    # },
+    "black": { 
+        "value" : (0, 0, 0),
+        "sound" : pygame.mixer.Sound("assets/black.wav"),
+        "toggle" : False
+    },
+    "white": { 
+        "value" : (255, 255, 255),
+        "sound" : pygame.mixer.Sound("assets/white.wav"),
+        "toggle" : True
+    },
+    "pink": { 
+        "value" : (255, 182, 193),
+        "sound" : pygame.mixer.Sound("assets/pink.wav"),
+        "toggle" : False
+    }
+}
+
+COLOR_NAMES = list(color_items.keys())
+
 # Screen dimensions
 WIDTH, HEIGHT = 1024, 768
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-# screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Color Selection Game")
-
-# Colors
-COLORS = {
-    "red": (255, 0, 0),
-    "green": (0, 255, 0),
-    "blue": (0, 0, 255),
-    "yellow": (255, 255, 0),
-    "purple": (128, 0, 128),
-    # "orange": (255, 165, 0),
-    "black": (0, 0, 0),
-    "white": (255, 255, 255),
-    "pink": (255, 182, 193)
-}
-COLOR_NAMES = list(COLORS.keys())
-
-# toggle options
-toggles = {}
-toggles["red"] = True
-toggles["green"] = True
-toggles["blue"] = False
-toggles["yellow"] = False
-toggles["purple"] = False
-# toggles["orange"] = True
-toggles["black"] = False
-toggles["white"] = True
-toggles["pink"] = False
 
 # Fonts
 font = pygame.font.Font(None, 74)
@@ -53,15 +77,6 @@ correct_sound = pygame.mixer.Sound("assets/right.wav")
 wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      
 well_done_sound = pygame.mixer.Sound("assets/well_done.wav")
 click_sound = pygame.mixer.Sound("assets/mouse_click.wav")
-sounds["red"] = pygame.mixer.Sound("assets/red.wav")        
-sounds["green"] = pygame.mixer.Sound("assets/green.wav")    
-sounds["blue"] = pygame.mixer.Sound("assets/blue.wav")      
-sounds["yellow"] = pygame.mixer.Sound("assets/yellow.wav")  
-sounds["purple"] = pygame.mixer.Sound("assets/purple.wav")  
-# sounds["orange"] = pygame.mixer.Sound("assets/orange.wav")
-sounds["black"] = pygame.mixer.Sound("assets/black.wav")    
-sounds["white"] = pygame.mixer.Sound("assets/white.wav")    
-sounds["pink"] = pygame.mixer.Sound("assets/pink.wav")      
 
 # Emojis
 happy_face = pygame.image.load("assets/happy_face.png") 
@@ -144,10 +159,11 @@ def options_screen():
                 for acolor in COLOR_NAMES:
                     if opt_rect[acolor].collidepoint(x, y):
                         click_sound.play()
-                        toggles[acolor] = not toggles[acolor]
-                        num_available_colors = list(toggles.values()).count(True)
+                        color_items[acolor]["toggle"] = not color_items[acolor]["toggle"]
+                        # num_available_colors = list(toggles.values()).count(True)
+                        num_available_colors = sum(1 for item in color_items.values() if item["toggle"])
                         if num_available_colors < num_choices:
-                            toggles[acolor] = not toggles[acolor]
+                            color_items[acolor]["toggle"] = not color_items[acolor]["toggle"]
                 if quit_button_rect.collidepoint(x, y):
                     # Return to the title screen
                     click_sound.play()
@@ -155,7 +171,7 @@ def options_screen():
         # Draw option checkboxes
         for acolor in COLOR_NAMES:
             pygame.draw.rect(screen, acolor, opt_rect[acolor], opt_width)
-            if toggles[acolor]:
+            if color_items[acolor]["toggle"]:
                 # draw smaller box
                 pygame.draw.rect(screen, acolor, opt_rect[acolor].inflate(-4, -4))
 
@@ -171,9 +187,8 @@ def title_screen():
         # Display the title screen
         screen.fill((128, 128, 128))  # Grey background
         title_text = font.render("Color Selection Game", True, (0, 0, 0))
-        # title_rect = pygame.Rect(WIDTH // 2 - title_text.get_width() // 2 - 2, HEIGHT // 2 - 50 - 2 , title_text.get_width() + 4, title_text.get_height() + 4)
-        # pygame.draw.rect(screen, "gold", title_rect, 2)
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 2 - 50))
+
         # Draw "Start" button
         button_width, button_height = 200, 50
         start_button_x = WIDTH // 2 - button_width // 2
@@ -239,7 +254,7 @@ def draw_screen():
         
     # Draw the squares
     for i, pos in enumerate(square_positions):
-        pygame.draw.rect(screen, COLORS[square_colors[i]], (*pos, square_size, square_size))
+        pygame.draw.rect(screen, color_items[square_colors[i]]["value"], (*pos, square_size, square_size))
 
     # Display result
     if result is not None:
@@ -270,7 +285,7 @@ def draw_screen():
         pygame.time.delay(250)  # Delay for 1 second
         title_sound.play()  # Play title sound at the beginning of each round
         pygame.time.delay(500)
-        sounds[correct_color].play()  # Play correct color sound at the title screen
+        color_items[correct_color]["sound"].play()  # Play correct color sound at the title screen
     return game_rect
 
 # Function to generate square positions dynamically
@@ -280,7 +295,6 @@ def generate_square_positions(num_choices):
     spacing = WIDTH // num_choices - square_size
     total_width = num_choices * square_size + (num_choices - 1) * spacing
     start_x = (WIDTH - total_width) // 2
-    # start_y = HEIGHT // 2 - square_size // 2
     start_y = HEIGHT // 2 - square_size
     for i in range(num_choices):
         x = start_x + i * (square_size + spacing)
@@ -289,19 +303,9 @@ def generate_square_positions(num_choices):
     return positions
 
 # Function to generate squares with only one correct choice
-def generate_squares(num_choices, previous_color=None):
-    print('generate_squares: ')
-    print(toggles)
-    print('COLOR_NAMES: ')
-    print(COLOR_NAMES)
-    really_available_colors = [c for c in COLOR_NAMES if toggles[c]]
+def generate_squares(num_choices):
+    really_available_colors = [c for c in COLOR_NAMES if color_items[c]["toggle"]]
     print(really_available_colors)
-    # Ensure the new correct color is different from the previous one
-    # if previous_color:
-    #     available_colors = [c for c in COLOR_NAMES if c != previous_color]
-    #     correct_color = random.choice(available_colors)
-    # else:
-    #     correct_color = random.choice(COLOR_NAMES)
     correct_color = random.choice(really_available_colors)
 
 
@@ -345,9 +349,8 @@ show_next_button = False
 highlight_x, highlight_y = 0, 0
 
 # Initialize the first question
-previous_color = None
 square_positions = generate_square_positions(num_choices)
-correct_color, square_colors = generate_squares(num_choices, previous_color)
+correct_color, square_colors = generate_squares(num_choices)
 
 # Clear any lingering events
 pygame.event.clear()  
@@ -383,8 +386,7 @@ while running:
                         result = None
                         score = 0
                         game_over = False
-                        previous_color = None
-                        correct_color, square_colors = generate_squares(num_choices, previous_color)
+                        correct_color, square_colors = generate_squares(num_choices)
                         show_next_button = False
                         waiting = False
                     elif exit_game_button_rect.collidepoint(x, y):
@@ -402,8 +404,9 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
+            # logic for audio prompt when clicking on the title
             # if find_color_rect.collidepoint(x, y):
-            #     print(find_color_rect)
+                # print(find_color_rect)
                 # pygame.time.delay(250)  # Delay for 1 second
                 # title_sound.play()  # Play title sound at the beginning of each round
                 # pygame.time.delay(500)
@@ -413,8 +416,7 @@ while running:
                 click_sound.play()
                 show_next_button = False
                 result = None
-                previous_color = correct_color
-                correct_color, square_colors = generate_squares(num_choices, previous_color)
+                correct_color, square_colors = generate_squares(num_choices)
                 screen.fill((128, 128, 128))  # Grey background
                 new_screen = True
             elif quit_button_rect.collidepoint(x, y):
