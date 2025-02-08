@@ -6,17 +6,33 @@ import random
 pygame.init()
 clock = pygame.time.Clock()
 
+# Game variables
+num_choices = 2 # Customizable number of choices
+min_num_choices = 1 # Minimum number of choices
+max_num_choices = 5 # Maximum number of choices
+
+# Main game variable, color items
 color_items = {}
 color_items = {
+    "black": { 
+        "value" : (0, 0, 0),
+        "sound" : pygame.mixer.Sound("assets/black.wav"),
+        "toggle" : True
+    },
+    "white": { 
+        "value" : (255, 255, 255),
+        "sound" : pygame.mixer.Sound("assets/white.wav"),
+        "toggle" : True
+    },
     "red": { 
         "value" : (255, 0, 0),
         "sound" : pygame.mixer.Sound("assets/red.wav"),
-        "toggle" : True
+        "toggle" : False
     },
     "green": { 
         "value" : (0, 255, 0),
         "sound" : pygame.mixer.Sound("assets/green.wav"),
-        "toggle" : True
+        "toggle" : False
     },
     "blue": { 
         "value" : (0, 0, 255),
@@ -38,16 +54,6 @@ color_items = {
     #     "sound" : pygame.mixer.Sound("assets/orange.wav"),
     #     "toggle" : True
     # },
-    "black": { 
-        "value" : (0, 0, 0),
-        "sound" : pygame.mixer.Sound("assets/black.wav"),
-        "toggle" : False
-    },
-    "white": { 
-        "value" : (255, 255, 255),
-        "sound" : pygame.mixer.Sound("assets/white.wav"),
-        "toggle" : True
-    },
     "pink": { 
         "value" : (255, 182, 193),
         "sound" : pygame.mixer.Sound("assets/pink.wav"),
@@ -73,20 +79,33 @@ pygame.mixer.init()
 sounds = {}
 title_sound = pygame.mixer.Sound("assets/title.wav")    
 select_sound = pygame.mixer.Sound("assets/select.wav")  
-correct_sound = pygame.mixer.Sound("assets/right.wav")  
-wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      
+# correct_sound = pygame.mixer.Sound("assets/right.wav")  
+# wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      
 well_done_sound = pygame.mixer.Sound("assets/well_done.wav")
 click_sound = pygame.mixer.Sound("assets/mouse_click.wav")
+
+right_sounds = [
+    pygame.mixer.Sound("assets/correct.wav"),
+    pygame.mixer.Sound("assets/excellent.wav"),
+    pygame.mixer.Sound("assets/good.wav"),
+    pygame.mixer.Sound("assets/great.wav"),
+    pygame.mixer.Sound("assets/right.wav"),
+    pygame.mixer.Sound("assets/verygood.wav"),
+    pygame.mixer.Sound("assets/yes.wav")
+    ]
+wrong_sounds = [
+    pygame.mixer.Sound("assets/bad.wav"),
+    pygame.mixer.Sound("assets/no.wav"),
+    pygame.mixer.Sound("assets/nogood.wav"),
+    pygame.mixer.Sound("assets/notgood.wav"),
+    pygame.mixer.Sound("assets/wrong.wav")
+    ]
 
 # Emojis
 happy_face = pygame.image.load("assets/happy_face.png") 
 sad_face = pygame.image.load("assets/red_sad_face.png")     
 happy_face = pygame.transform.scale(happy_face, (200, 200))  
 sad_face = pygame.transform.scale(sad_face, (200, 200))      
-
-# Game variables
-max_num_choices = 5 # Maximum number of choices
-num_choices = 2 # Customizable number of choices
 
 # square_size = 150
 square_size = WIDTH // max_num_choices - 10  # Square size based on max number of choices
@@ -159,7 +178,7 @@ def options_screen():
                 if minus_button_rect.collidepoint(x, y):
                     # Decrease the number of choices
                     click_sound.play()
-                    num_choices = max(num_choices - 1, 2)
+                    num_choices = max(num_choices - 1, min_num_choices)
                 for acolor in COLOR_NAMES:
                     if opt_rect[acolor].collidepoint(x, y):
                         click_sound.play()
@@ -422,7 +441,7 @@ while running:
                         highlight_x, highlight_y = pos
                         if square_colors[i] == correct_color:
                             result = "RIGHT !"
-                            correct_sound.play()  # Play correct sound effect
+                            random.choice(right_sounds).play()
                             show_next_button = True
                             score += 1  # Increase score
                             if score >= target_score:
@@ -433,7 +452,7 @@ while running:
                                 pygame.display.flip()
                         else:
                             result = "WRONG !"
-                            wrong_sound.play()  # Play wrong sound effect
+                            random.choice(wrong_sounds).play()
                             show_next_button = False
                         break
                 new_screen = True
