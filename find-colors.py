@@ -6,10 +6,64 @@ import random
 pygame.init()
 clock = pygame.time.Clock()
 
+# Screen dimensions
+WIDTH, HEIGHT = 1024, 768
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+pygame.display.set_caption("Color Selection Game")
+
+# Fonts
+normal_font = pygame.font.Font(None, 74)
+big_font = pygame.font.Font(None, 96)
+button_font = pygame.font.Font(None, 50)
+score_font = pygame.font.Font(None, 50)
+
 # Game variables
 num_choices = 2 # Customizable number of choices
 min_num_choices = 1 # Minimum number of choices
 max_num_choices = 5 # Maximum number of choices
+
+# test button class
+class button:
+    def __init__(self, x, y, text, width=200, height=50, color="darkgreen"):
+        self.width = width
+        self.height = height
+        self.x = x
+        self.y = y
+        self.color = color
+        self.text = button_font.render(text, True, (255, 255, 255))
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+    def draw(self):
+        pygame.draw.rect(screen, self.color, self.rect)
+        screen.blit(self.text, (self.x + 20, self.y + 10))
+
+# Load sound effects
+pygame.mixer.init()
+title_sound = pygame.mixer.Sound("assets/title.wav")    
+select_sound = pygame.mixer.Sound("assets/select.wav")  
+well_done_sound = pygame.mixer.Sound("assets/well_done.wav")
+click_sound = pygame.mixer.Sound("assets/mouse_click.wav")
+right_sounds = [
+    pygame.mixer.Sound("assets/correct.wav"),
+    pygame.mixer.Sound("assets/excellent.wav"),
+    pygame.mixer.Sound("assets/good.wav"),
+    pygame.mixer.Sound("assets/great.wav"),
+    pygame.mixer.Sound("assets/right.wav"),
+    pygame.mixer.Sound("assets/verygood.wav"),
+    pygame.mixer.Sound("assets/yes.wav")
+    ]
+wrong_sounds = [
+    pygame.mixer.Sound("assets/bad.wav"),
+    pygame.mixer.Sound("assets/no.wav"),
+    pygame.mixer.Sound("assets/nogood.wav"),
+    pygame.mixer.Sound("assets/notgood.wav"),
+    pygame.mixer.Sound("assets/wrong.wav")
+    ]
+
+# Emojis
+happy_face = pygame.image.load("assets/happy_face.png") 
+sad_face = pygame.image.load("assets/red_sad_face.png")     
+happy_face = pygame.transform.scale(happy_face, (200, 200))  
+sad_face = pygame.transform.scale(sad_face, (200, 200))      
 
 # Main game variable, color items
 color_items = {}
@@ -63,51 +117,7 @@ color_items = {
 
 COLOR_NAMES = list(color_items.keys())
 
-# Screen dimensions
-WIDTH, HEIGHT = 1024, 768
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-pygame.display.set_caption("Color Selection Game")
-
-# Fonts
-font = pygame.font.Font(None, 74)
-big_font = pygame.font.Font(None, 96)
-button_font = pygame.font.Font(None, 50)
-score_font = pygame.font.Font(None, 50)
-
-# Sound effects
-pygame.mixer.init()
-sounds = {}
-title_sound = pygame.mixer.Sound("assets/title.wav")    
-select_sound = pygame.mixer.Sound("assets/select.wav")  
-# correct_sound = pygame.mixer.Sound("assets/right.wav")  
-# wrong_sound = pygame.mixer.Sound("assets/wrong.wav")      
-well_done_sound = pygame.mixer.Sound("assets/well_done.wav")
-click_sound = pygame.mixer.Sound("assets/mouse_click.wav")
-
-right_sounds = [
-    pygame.mixer.Sound("assets/correct.wav"),
-    pygame.mixer.Sound("assets/excellent.wav"),
-    pygame.mixer.Sound("assets/good.wav"),
-    pygame.mixer.Sound("assets/great.wav"),
-    pygame.mixer.Sound("assets/right.wav"),
-    pygame.mixer.Sound("assets/verygood.wav"),
-    pygame.mixer.Sound("assets/yes.wav")
-    ]
-wrong_sounds = [
-    pygame.mixer.Sound("assets/bad.wav"),
-    pygame.mixer.Sound("assets/no.wav"),
-    pygame.mixer.Sound("assets/nogood.wav"),
-    pygame.mixer.Sound("assets/notgood.wav"),
-    pygame.mixer.Sound("assets/wrong.wav")
-    ]
-
-# Emojis
-happy_face = pygame.image.load("assets/happy_face.png") 
-sad_face = pygame.image.load("assets/red_sad_face.png")     
-happy_face = pygame.transform.scale(happy_face, (200, 200))  
-sad_face = pygame.transform.scale(sad_face, (200, 200))      
-
-# square_size = 150
+# new game variables
 square_size = WIDTH // max_num_choices - 10  # Square size based on max number of choices
 score = 0
 target_score = 10
@@ -131,39 +141,23 @@ def options_screen():
     waiting = True
     while waiting:
         screen.fill((128, 128, 128))  # Grey background
-        title_text = font.render("Options", True, (0, 0, 0))
+        title_text = normal_font.render("Options", True, (0, 0, 0))
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 50))
-        # Display the current number of choices
+        # Option for number of choices
         choices_text = button_font.render(f"Number of choices: {num_choices}", True, "white")
         screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT * 2 // 5 - 50))
         # Draw "+" button
-        button_width, button_height = 50, 50
-        plus_button_x = WIDTH // 2 - button_width // 2 + 50
-        plus_button_y = HEIGHT * 2 // 5
-        plus_button_rect = pygame.Rect(plus_button_x, plus_button_y, button_width, button_height)
-        plus_button_text = button_font.render("+", True, (255, 255, 255))
-        pygame.draw.rect(screen, (0, 128, 0), plus_button_rect)  # Green button
-        screen.blit(plus_button_text, (plus_button_x + 20, plus_button_y + 10))
+        plus_button = button(WIDTH // 2 - 25 + 50, HEIGHT * 2 // 5, "+", 50, 50, "darkred")
+        plus_button.draw()
         # Draw "-" button
-        minus_button_x = WIDTH // 2 - button_width // 2 - 50
-        minus_button_y = HEIGHT * 2 // 5
-        minus_button_rect = pygame.Rect(minus_button_x, minus_button_y, button_width, button_height)
-        minus_button_text = button_font.render("-", True, (255, 255, 255))
-        pygame.draw.rect(screen, (128, 0, 0), minus_button_rect)  # Red button
-        screen.blit(minus_button_text, (minus_button_x + 20, minus_button_y + 10))
-
-        # Color checkboxes
+        minus_button = button(WIDTH // 2 - 25 - 50, HEIGHT * 2 // 5, "-", 50, 50, "darkred")
+        minus_button.draw()
+        # Optoin for available colors
         choices_text = button_font.render("Available colors: ", True, "white")
         screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT // 2 + 50))
-
         # Draw "OK" button
-        button_width, button_height = 200, 50
-        quit_button_x = WIDTH // 2 - button_width // 2
-        quit_button_y = HEIGHT // 2 + 50 + 150
-        quit_button_rect = pygame.Rect(quit_button_x, quit_button_y, button_width, button_height)
-        quit_button_text = button_font.render("OK", True, (255, 255, 255))
-        pygame.draw.rect(screen, (0, 128, 0), quit_button_rect)  # Green button
-        screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+        ok_button = button(WIDTH // 2 - 100, HEIGHT // 2 + 200, "OK", 200, 50, "darkgreen")
+        ok_button.draw()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -171,11 +165,11 @@ def options_screen():
                 return
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                if plus_button_rect.collidepoint(x, y):
+                if plus_button.rect.collidepoint(x, y):
                     # Increase the number of choices
                     click_sound.play()
                     num_choices = min(num_choices + 1, max_num_choices)
-                if minus_button_rect.collidepoint(x, y):
+                if minus_button.rect.collidepoint(x, y):
                     # Decrease the number of choices
                     click_sound.play()
                     num_choices = max(num_choices - 1, min_num_choices)
@@ -186,7 +180,7 @@ def options_screen():
                         num_available_colors = sum(1 for item in color_items.values() if item["toggle"])
                         if num_available_colors < num_choices:
                             color_items[acolor]["toggle"] = not color_items[acolor]["toggle"]
-                if quit_button_rect.collidepoint(x, y):
+                if ok_button.rect.collidepoint(x, y):
                     # Return to the title screen
                     click_sound.play()
                     return
@@ -202,55 +196,36 @@ def options_screen():
 #
 def title_screen():
     global running
-
-    # Event handling for title screen
     waiting = True
     while waiting:
         # Display the title screen
-        screen.fill((128, 128, 128))  # Grey background
-        title_text = font.render("Color Selection Game", True, (0, 0, 0))
+        screen.fill((128, 128, 128))
+        title_text = normal_font.render("Color Selection Game", True, (0, 0, 0))
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 2 - 50))
-
-        # Draw "Start" button
-        button_width, button_height = 200, 50
-        start_button_x = WIDTH // 2 - button_width // 2
-        start_button_y = HEIGHT // 2 + 50
-        start_button_rect = pygame.Rect(start_button_x, start_button_y, button_width, button_height)
-        start_button_text = button_font.render("Start", True, (255, 255, 255))
-        pygame.draw.rect(screen, (0, 128, 0), start_button_rect)  # Green button
-        screen.blit(start_button_text, (start_button_x + 20, start_button_y + 10))
-
-        # Draw "Options" button
-        option_button_x = WIDTH // 2 - button_width // 2
-        option_button_y = HEIGHT // 2 + 50 + 75
-        option_button_rect = pygame.Rect(option_button_x, option_button_y, button_width, button_height)
-        option_button_text = button_font.render("Options", True, (255, 255, 255))
-        pygame.draw.rect(screen, (0, 128, 0), option_button_rect)  # Green button
-        screen.blit(option_button_text, (option_button_x + 20, option_button_y + 10))
-
-        # Draw "Quit" button
-        quit_button_x = WIDTH // 2 - button_width // 2
-        quit_button_y = HEIGHT // 2 + 50 + 150
-        quit_button_rect = pygame.Rect(quit_button_x, quit_button_y, button_width, button_height)
-        quit_button_text = button_font.render("Quit", True, (255, 255, 255))
-        pygame.draw.rect(screen, (128, 0, 0), quit_button_rect)  # Green button
-        screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+        start_button = button(WIDTH // 2 - 100, HEIGHT // 2 + 50, "Start", 200, 50)
+        start_button.draw()
+        option_button = button(WIDTH // 2 - 100, HEIGHT // 2 + 50 + 75, "Options", 200, 50)
+        option_button.draw()
+        quit_button = button(WIDTH // 2 - 100, HEIGHT // 2 + 50 + 150, "Quit", 200, 50, "darkred")
+        quit_button.draw()
         pygame.display.flip()
+
+        # Event handling for title screen
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                if start_button_rect.collidepoint(x, y):
+                if start_button.rect.collidepoint(x, y):
                     # Proceed to the next round
                     click_sound.play()
                     return True
-                if option_button_rect.collidepoint(x, y):
+                if option_button.rect.collidepoint(x, y):
                     # Switch to options screen
                     click_sound.play()
                     options_screen()
-                if quit_button_rect.collidepoint(x, y):
+                if quit_button.rect.collidepoint(x, y):
                     click_sound.play()
                     pygame.quit()
                     sys.exit()
@@ -265,7 +240,7 @@ def draw_screen():
     screen.blit(score_text, (20, 20))
 
     # Display the color name to select
-    game_text = font.render(f"Find {correct_color.capitalize()}", True, "black")
+    game_text = normal_font.render(f"Find {correct_color.capitalize()}", True, "black")
     game_rect = pygame.Rect(WIDTH // 2 - game_text.get_width() // 2 - 2, 50 - 2, game_text.get_width() + 4, game_text.get_height() + 4)
     pygame.draw.rect(screen, "gold", game_rect.inflate(0, 0))
     screen.blit(game_text, (WIDTH // 2 - game_text.get_width() // 2, 50))
@@ -290,13 +265,11 @@ def draw_screen():
 
     # Draw the "Next" button if the round is over
     if show_next_button and not game_over:
-        pygame.draw.rect(screen, (0, 128, 0), next_button_rect)  # Green button
-        screen.blit(next_button_text, (next_button_x + 20, next_button_y + 10))
+        next_button.draw()
 
     # Draw the "Quit" button
     if not game_over:
-        pygame.draw.rect(screen, (255, 0, 0), quit_button_rect)  # Red button
-        screen.blit(quit_button_text, (quit_button_x + 20, quit_button_y + 10))
+        quit_button.draw()
 
     # Update the display
     pygame.display.flip()
@@ -334,26 +307,13 @@ def generate_squares(num_choices):
     random.shuffle(square_colors)  # Shuffle to randomize positions
     return correct_color, square_colors
 
-# Button variables
-button_width, button_height = 200, 50
-
-# "Next" button
-next_button_x = WIDTH - button_width - 20
-next_button_y = HEIGHT - button_height - 20
-next_button_rect = pygame.Rect(next_button_x, next_button_y, button_width, button_height)
-next_button_text = button_font.render("Next", True, (255, 255, 255))
-
-# "Quit" button
-quit_button_x = WIDTH - button_width - 20
-quit_button_y = 20
-quit_button_rect = pygame.Rect(quit_button_x, quit_button_y, button_width, button_height)
-quit_button_text = button_font.render("Quit", True, (255, 255, 255))
-
-# "New Game" and "Exit Game" buttons
-new_game_button_rect = pygame.Rect(WIDTH // 2 - button_width - 10, HEIGHT // 2 + 50, button_width, button_height)
-new_game_button_text = button_font.render("New Game", True, (255, 255, 255))
-exit_game_button_rect = pygame.Rect(WIDTH // 2 + 10, HEIGHT // 2 + 50, button_width, button_height)
-exit_game_button_text = button_font.render("Exit Game", True, (255, 255, 255))
+# Define "Next" button
+next_button = button(WIDTH - 200 - 20, HEIGHT - 50 - 20, "Next", 200, 50)
+# Define "Quit" button
+quit_button = button(WIDTH - 200 - 20, 20, "Quit", 200, 50, "darkred")
+# Define "New Game" and "Exit Game" buttons
+new_game_button = button(WIDTH // 2 - 200 - 10, HEIGHT // 2 + 50, "New Game", 200, 50)
+exit_game_button = button(WIDTH // 2 + 10, HEIGHT // 2 + 50, "Exit Game", 200, 50, "darkred")
 
 # Display the title screen 
 title_screen()
@@ -377,16 +337,14 @@ while running:
         find_color_rect = draw_screen()
         new_screen = False
     if game_over:
-        pygame.time.delay(1000)  # Delay for 1 second
-        screen.fill((128, 128, 128))  # Grey background
-        well_done_text = font.render("Well Done!", True, pygame.color.Color("gold"))
+        pygame.time.delay(1000)
+        screen.fill((128, 128, 128))
+        well_done_text = normal_font.render("Well Done!", True, pygame.color.Color("gold"))
         screen.blit(well_done_text, (WIDTH // 2 - well_done_text.get_width() // 2, HEIGHT // 2 - 50))
-        well_done_sound.play()  # Play well done sound
-        # Draw "New Game" and "Exit Game" buttons
-        pygame.draw.rect(screen, (0, 128, 0), new_game_button_rect)  # Green button
-        screen.blit(new_game_button_text, (new_game_button_rect.x + 10, new_game_button_rect.y + 10))
-        pygame.draw.rect(screen, (255, 0, 0), exit_game_button_rect)  # Red button
-        screen.blit(exit_game_button_text, (exit_game_button_rect.x + 10, exit_game_button_rect.y + 10))
+        well_done_sound.play()
+        new_game_button.draw()
+        exit_game_button.draw()
+
         pygame.display.flip()
 
         # Event handling for game over screen
@@ -397,7 +355,7 @@ while running:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = event.pos
-                    if new_game_button_rect.collidepoint(x, y):
+                    if new_game_button.rect.collidepoint(x, y):
                         # Reset the game
                         click_sound.play()
                         result = None
@@ -406,7 +364,7 @@ while running:
                         correct_color, square_colors = generate_squares(num_choices)
                         show_next_button = False
                         waiting = False
-                    elif exit_game_button_rect.collidepoint(x, y):
+                    elif exit_game_button.rect.collidepoint(x, y):
                         click_sound.play()
                         running = False  # Exit the game
                         waiting = False
@@ -424,7 +382,7 @@ while running:
             # logic for audio prompt when clicking on the title
             # if find_color_rect.collidepoint(x, y):
                 # title_sound.play()  # Play title sound at the beginning of each round
-            if show_next_button and next_button_rect.collidepoint(x, y):
+            if show_next_button and next_button.rect.collidepoint(x, y):
                 # Proceed to the next round
                 click_sound.play()
                 show_next_button = False
@@ -432,7 +390,7 @@ while running:
                 correct_color, square_colors = generate_squares(num_choices)
                 screen.fill((128, 128, 128))  # Grey background
                 new_screen = True
-            elif quit_button_rect.collidepoint(x, y):
+            elif quit_button.rect.collidepoint(x, y):
                 click_sound.play()
                 running = False  # Quit the game
             elif not show_next_button:
@@ -447,8 +405,7 @@ while running:
                             if score >= target_score:
                                 game_over = True
                             if show_next_button and not game_over:
-                                pygame.draw.rect(screen, (0, 128, 0), next_button_rect)  # Green button
-                                screen.blit(next_button_text, (next_button_x + 20, next_button_y + 10))
+                                next_button.draw()
                                 pygame.display.flip()
                         else:
                             result = "WRONG !"
