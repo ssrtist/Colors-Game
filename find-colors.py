@@ -384,6 +384,7 @@ while running:
                         result = None
                         score = 0
                         game_over = False
+                        options_screen()
                         correct_color, square_colors = generate_squares(num_choices)
                         show_next_button = False
                         waiting = False
