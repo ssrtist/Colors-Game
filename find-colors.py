@@ -43,11 +43,11 @@ select_sound = pygame.mixer.Sound("assets/select.wav")
 well_done_sound = pygame.mixer.Sound("assets/well_done.wav")
 click_sound = pygame.mixer.Sound("assets/mouse_click.wav")
 right_sounds = [
-    pygame.mixer.Sound("assets/correct.wav"),
+    # pygame.mixer.Sound("assets/correct.wav"),
     pygame.mixer.Sound("assets/excellent.wav"),
     pygame.mixer.Sound("assets/good.wav"),
     pygame.mixer.Sound("assets/great.wav"),
-    pygame.mixer.Sound("assets/right.wav"),
+    # pygame.mixer.Sound("assets/right.wav"),
     pygame.mixer.Sound("assets/verygood.wav"),
     pygame.mixer.Sound("assets/yes.wav")
     ]
@@ -121,41 +121,63 @@ COLOR_NAMES = list(color_items.keys())
 square_size = WIDTH // max_num_choices - 10  # Square size based on max number of choices
 score = 0
 target_score = 10
+force_correct_color = None
 game_over = False
 
 def options_screen():
-    global num_choices, toggles
+    global num_choices, toggles, force_correct_color
 
-    # Draw checkboxes
+    # Option 2: Generate checkboxes
     opt_rect = {}
+    force_opt_rect = {}
     opt_size = 50
-    opt_width = 4
-    opt_x = (WIDTH - opt_size * 1.25 * len(COLOR_NAMES)) // 2
-    opt_y = HEIGHT // 2 + 100
     i = 0
     for acolor in COLOR_NAMES:
-        opt_rect[acolor] = pygame.Rect(i * opt_size * 1.25 + opt_x, opt_y, opt_size, opt_size)
+        opt_rect[acolor] = pygame.Rect((WIDTH - opt_size * 1.25 * len(COLOR_NAMES)) // 2 + (i * opt_size * 1.25), HEIGHT * 2 // 5, opt_size, opt_size)
+        force_opt_rect[acolor] = pygame.Rect((WIDTH - opt_size * 1.25 * len(COLOR_NAMES)) // 2 + (i * opt_size * 1.25), HEIGHT * 3 // 5, opt_size, opt_size)
         i += 1
 
     # Event handling for options screen
     waiting = True
     while waiting:
         screen.fill((128, 128, 128))  # Grey background
+
+        # Section 0: Options title
         title_text = normal_font.render("Options", True, (0, 0, 0))
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 50))
-        # Option for number of choices
-        choices_text = button_font.render(f"Number of choices: {num_choices}", True, "white")
-        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT * 2 // 5 - 50))
+
+        # Section 1. Option for number of choices
+        choices_text = button_font.render(f"Number of choices: ", True, "white")
+        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT * 1 // 5 - 50))
+        num_choices_text = button_font.render(f"{num_choices}", True, "darkred")
+        screen.blit(num_choices_text, (WIDTH // 2 - num_choices_text.get_width() // 2, HEIGHT * 1 // 5))
+
         # Draw "+" button
-        plus_button = button(WIDTH // 2 - 25 + 50, HEIGHT * 2 // 5, "+", 50, 50, "darkred")
+        plus_button = button(WIDTH // 2 - 25 + 50, HEIGHT * 1 // 5, "+", 50, 50, "darkred")
         plus_button.draw()
         # Draw "-" button
-        minus_button = button(WIDTH // 2 - 25 - 50, HEIGHT * 2 // 5, "-", 50, 50, "darkred")
+        minus_button = button(WIDTH // 2 - 25 - 50, HEIGHT * 1 // 5, "-", 50, 50, "darkred")
         minus_button.draw()
-        # Optoin for available colors
+
+        # Section 2. Option for available colors
         choices_text = button_font.render("Available colors: ", True, "white")
-        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT // 2 + 50))
-        # Draw "OK" button
+        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT * 2 // 5 - 50))
+        # Draw option checkboxes
+        for acolor in COLOR_NAMES:
+            pygame.draw.rect(screen, acolor, opt_rect[acolor], 4)
+            if color_items[acolor]["toggle"]:
+                # draw smaller box
+                pygame.draw.rect(screen, acolor, opt_rect[acolor].inflate(-10, -10))
+            pygame.draw.rect(screen, acolor, force_opt_rect[acolor], 4)
+            if force_correct_color == acolor:
+                # draw smaller box
+                pygame.draw.rect(screen, acolor, force_opt_rect[acolor].inflate(-10, -10))
+
+        # Section 3: Option for right color
+        choices_text = button_font.render("Right color: ", True, "white")
+        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT * 3 // 5 - 50))
+
+        # Section 4: Draw "OK" button
         ok_button = button(WIDTH // 2 - 100, HEIGHT // 2 + 200, "OK", 200, 50, "darkgreen")
         ok_button.draw()
 
@@ -180,17 +202,16 @@ def options_screen():
                         num_available_colors = sum(1 for item in color_items.values() if item["toggle"])
                         if num_available_colors < num_choices:
                             color_items[acolor]["toggle"] = not color_items[acolor]["toggle"]
+                    if force_opt_rect[acolor].collidepoint(x, y):
+                        click_sound.play()
+                        if force_correct_color == acolor:
+                            force_correct_color = None
+                        else:
+                            force_correct_color = acolor
                 if ok_button.rect.collidepoint(x, y):
                     # Return to the title screen
                     click_sound.play()
                     return
-        # Draw option checkboxes
-        for acolor in COLOR_NAMES:
-            pygame.draw.rect(screen, acolor, opt_rect[acolor], opt_width)
-            if color_items[acolor]["toggle"]:
-                # draw smaller box
-                pygame.draw.rect(screen, acolor, opt_rect[acolor].inflate(-4, -4))
-
         pygame.display.flip()
         clock.tick(30)
 #
@@ -300,23 +321,25 @@ def generate_square_positions(num_choices):
 # Function to generate squares with only one correct choice
 def generate_squares(num_choices):
     really_available_colors = [c for c in COLOR_NAMES if color_items[c]["toggle"]]
-    correct_color = random.choice(really_available_colors)
+    if force_correct_color:
+        correct_color = force_correct_color
+    else:
+        correct_color = random.choice(really_available_colors)
     # Ensure the correct color is only present once
     incorrect_colors = random.sample([c for c in really_available_colors if c != correct_color], num_choices - 1)  # Pick incorrect colors
     square_colors = incorrect_colors + [correct_color]  # Combine incorrect and correct colors
     random.shuffle(square_colors)  # Shuffle to randomize positions
     return correct_color, square_colors
 
-# Define "Next" button
+# Button definitions
 next_button = button(WIDTH - 200 - 20, HEIGHT - 50 - 20, "Next", 200, 50)
-# Define "Quit" button
 quit_button = button(WIDTH - 200 - 20, 20, "Quit", 200, 50, "darkred")
-# Define "New Game" and "Exit Game" buttons
 new_game_button = button(WIDTH // 2 - 200 - 10, HEIGHT // 2 + 50, "New Game", 200, 50)
 exit_game_button = button(WIDTH // 2 + 10, HEIGHT // 2 + 50, "Exit Game", 200, 50, "darkred")
 
 # Display the title screen 
-title_screen()
+# title_screen()
+options_screen()
 
 # Main game loop
 new_screen = True
