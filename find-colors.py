@@ -173,9 +173,9 @@ def options_screen():
                 # draw smaller box
                 pygame.draw.rect(screen, acolor, force_opt_rect[acolor].inflate(-10, -10))
 
-        # Section 3: Option for right color
-        choices_text = button_font.render("Right color: ", True, "white")
-        screen.blit(choices_text, (WIDTH // 2 - choices_text.get_width() // 2, HEIGHT * 3 // 5 - 50))
+        # Section 3: Option to force only 1 possible right color
+        only_choice_text = button_font.render("Only find color: ", True, "white")
+        screen.blit(only_choice_text, (WIDTH // 2 - only_choice_text.get_width() // 2, HEIGHT * 3 // 5 - 50))
 
         # Section 4: Draw "OK" button
         ok_button = button(WIDTH // 2 - 100, HEIGHT // 2 + 200, "OK", 200, 50, "darkgreen")
@@ -202,11 +202,13 @@ def options_screen():
                         num_available_colors = sum(1 for item in color_items.values() if item["toggle"])
                         if num_available_colors < num_choices:
                             color_items[acolor]["toggle"] = not color_items[acolor]["toggle"]
+                        if not color_items[acolor]["toggle"] and force_correct_color == acolor:
+                            force_correct_color = None
                     if force_opt_rect[acolor].collidepoint(x, y):
                         click_sound.play()
                         if force_correct_color == acolor:
                             force_correct_color = None
-                        else:
+                        elif color_items[acolor]["toggle"]:
                             force_correct_color = acolor
                 if ok_button.rect.collidepoint(x, y):
                     # Return to the title screen
