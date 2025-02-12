@@ -21,6 +21,7 @@ score_font = pygame.font.Font(None, 50)
 num_choices = 2 # Customizable number of choices
 min_num_choices = 1 # Minimum number of choices
 max_num_choices = 5 # Maximum number of choices
+square_size = WIDTH // max_num_choices - 10  # Square size based on max number of choices
 
 # test button class
 class button:
@@ -103,11 +104,6 @@ color_items = {
         "sound" : pygame.mixer.Sound("assets/purple.wav"),
         "toggle" : False
     },
-    # "orange": {
-    #     "value" : (255, 165, 0),
-    #     "sound" : pygame.mixer.Sound("assets/orange.wav"),
-    #     "toggle" : True
-    # },
     "pink": { 
         "value" : (255, 182, 193),
         "sound" : pygame.mixer.Sound("assets/pink.wav"),
@@ -116,13 +112,6 @@ color_items = {
 }
 
 COLOR_NAMES = list(color_items.keys())
-
-# new game variables
-square_size = WIDTH // max_num_choices - 10  # Square size based on max number of choices
-score = 0
-target_score = 10
-force_correct_color = None
-game_over = False
 
 def options_screen():
     global num_choices, toggles, force_correct_color
@@ -178,8 +167,11 @@ def options_screen():
         screen.blit(only_choice_text, (WIDTH // 2 - only_choice_text.get_width() // 2, HEIGHT * 3 // 5 - 50))
 
         # Section 4: Draw "OK" button
-        ok_button = button(WIDTH // 2 - 100, HEIGHT // 2 + 200, "OK", 200, 50, "darkgreen")
+        ok_button = button(WIDTH // 2 - 100, HEIGHT * 4 // 5, "OK", 200, 50, "darkgreen")
         ok_button.draw()
+
+        # Section 5: Draw "Quit" button
+        quit_button.draw()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -214,6 +206,12 @@ def options_screen():
                     # Return to the title screen
                     click_sound.play()
                     return
+                if quit_button.rect.collidepoint(x, y):
+                    # Quit the game
+                    click_sound.play()
+                    pygame.time.wait(500)
+                    pygame.quit()
+                    sys.exit()
         pygame.display.flip()
         clock.tick(30)
 #
@@ -259,7 +257,7 @@ def draw_screen():
     screen.fill((128, 128, 128))  # Grey background
 
     # Display the score
-    score_text = score_font.render(f"Score: {score}", True, (0, 0, 0))
+    score_text = score_font.render(f"Question {question_num + 1: >2}", True, (0, 0, 0))
     screen.blit(score_text, (20, 20))
 
     # Display the color name to select
@@ -268,10 +266,6 @@ def draw_screen():
     pygame.draw.rect(screen, "gold", game_rect.inflate(0, 0))
     screen.blit(game_text, (WIDTH // 2 - game_text.get_width() // 2, 50))
 
-    # Draw the squares
-    if result is not None:
-        pygame.draw.rect(screen, "brown", (highlight_x - 10, highlight_y - 10, square_size + 20, square_size + 20),5)    
-        
     # Draw the squares
     for i, pos in enumerate(square_positions):
         pygame.draw.rect(screen, color_items[square_colors[i]]["value"], (*pos, square_size, square_size))
@@ -339,7 +333,14 @@ quit_button = button(WIDTH - 200 - 20, 20, "Quit", 200, 50, "darkred")
 new_game_button = button(WIDTH // 2 - 200 - 10, HEIGHT // 2 + 50, "New Game", 200, 50)
 exit_game_button = button(WIDTH // 2 + 10, HEIGHT // 2 + 50, "Exit Game", 200, 50, "darkred")
 
-# Display the title screen 
+# new game variables
+question_num = 0
+real_score = 0
+target_question_num = 10
+wrong_answer = False
+force_correct_color = None
+game_over = False
+
 # title_screen()
 options_screen()
 
@@ -359,17 +360,21 @@ pygame.event.clear()
 
 while running:
     if new_screen:
-        find_color_rect = draw_screen()
+        draw_screen()
         new_screen = False
     if game_over:
+        # Display the game over screen
         pygame.time.delay(1000)
         screen.fill((128, 128, 128))
+        # Display the final score
+        final_score_text = score_font.render(f"Final Score: {round(real_score / 10 * 100)} %", True, pygame.Color("black"))
+        screen.blit(final_score_text, (WIDTH // 2 - final_score_text.get_width() // 2, HEIGHT * 1 // 5))
+        # Display the well done message
         well_done_text = normal_font.render("Well Done!", True, pygame.color.Color("gold"))
         screen.blit(well_done_text, (WIDTH // 2 - well_done_text.get_width() // 2, HEIGHT // 2 - 50))
         well_done_sound.play()
         new_game_button.draw()
         exit_game_button.draw()
-
         pygame.display.flip()
 
         # Event handling for game over screen
@@ -384,7 +389,8 @@ while running:
                         # Reset the game
                         click_sound.play()
                         result = None
-                        score = 0
+                        question_num = 0
+                        real_score = 0
                         game_over = False
                         options_screen()
                         correct_color, square_colors = generate_squares(num_choices)
@@ -405,40 +411,44 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            # logic for audio prompt when clicking on the title
-            # if find_color_rect.collidepoint(x, y):
-                # title_sound.play()  # Play title sound at the beginning of each round
+            # click next button to proceed to the next round
             if show_next_button and next_button.rect.collidepoint(x, y):
                 # Proceed to the next round
                 click_sound.play()
                 show_next_button = False
+                wrong_answer = False
                 result = None
                 correct_color, square_colors = generate_squares(num_choices)
-                screen.fill((128, 128, 128))  # Grey background
                 new_screen = True
+            # click quit button to exit the game
             elif quit_button.rect.collidepoint(x, y):
                 click_sound.play()
                 running = False  # Quit the game
+            # click on the squares to select the color
             elif not show_next_button:
                 for i, pos in enumerate(square_positions):
                     if pos[0] <= x <= pos[0] + square_size and pos[1] <= y <= pos[1] + square_size:
                         highlight_x, highlight_y = pos
                         if square_colors[i] == correct_color:
+                            pygame.draw.rect(screen, "brown", (highlight_x - 10, highlight_y - 10, square_size + 20, square_size + 20),5)    
                             result = "RIGHT !"
                             random.choice(right_sounds).play()
                             show_next_button = True
-                            score += 1  # Increase score
-                            if score >= target_score:
+                            question_num += 1  # Increase score
+                            if not wrong_answer:
+                                real_score += 1 
+                            if question_num >= target_question_num:
+                                # Game over after 10 questions
                                 game_over = True
-                            if show_next_button and not game_over:
+                            else:
                                 next_button.draw()
-                                pygame.display.flip()
+                            pygame.display.flip()
                         else:
                             result = "WRONG !"
                             random.choice(wrong_sounds).play()
                             show_next_button = False
+                            wrong_answer = True
                         break
-                new_screen = True
     clock.tick(30)
 
 # Quit pygame
