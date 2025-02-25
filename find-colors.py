@@ -253,7 +253,7 @@ def title_screen():
         clock.tick(30)
 # 
 def draw_screen():
-    global correct_color, square_colors, square_positions, result, show_next_button
+    global correct_color, square_colors, square_positions, result, show_next_button, new_round, highlight_x, highlight_y
     screen.fill((128, 128, 128))  # Grey background
 
     # Display the score
@@ -272,6 +272,7 @@ def draw_screen():
 
     # Display result
     if result is not None:
+        pygame.draw.rect(screen, "brown", (highlight_x - 10, highlight_y - 10, square_size + 20, square_size + 20),5)    
         result_text = big_font.render(result, True, pygame.Color("green" if result == "RIGHT !" else "red"))
         screen.blit(result_text, (WIDTH // 2 - result_text.get_width() // 2, HEIGHT - HEIGHT // 9))
         # Display emoji based on result
@@ -293,7 +294,8 @@ def draw_screen():
 
     # Play sounds
     # if not show_next_button:
-    if result is None:
+    if new_round:
+        new_round = False
         pygame.time.delay(250)  # Delay for 1 second
         title_sound.play()  # Play title sound at the beginning of each round
         pygame.time.delay(500)
@@ -340,12 +342,12 @@ target_question_num = 10
 wrong_answer = False
 force_correct_color = None
 game_over = False
+new_round = True
 
 # title_screen()
 options_screen()
 
 # Main game loop
-new_screen = True
 running = True
 result = None
 show_next_button = False
@@ -359,9 +361,8 @@ correct_color, square_colors = generate_squares(num_choices)
 pygame.event.clear()  
 
 while running:
-    if new_screen:
-        draw_screen()
-        new_screen = False
+    clock.tick(60)
+    draw_screen()
     if game_over:
         # Display the game over screen
         pygame.time.delay(1000)
@@ -400,9 +401,6 @@ while running:
                         click_sound.play()
                         running = False  # Exit the game
                         waiting = False
-
-        # pygame.display.flip()
-        new_screen = True
         continue
 
     # Event handling
@@ -419,7 +417,7 @@ while running:
                 wrong_answer = False
                 result = None
                 correct_color, square_colors = generate_squares(num_choices)
-                new_screen = True
+                new_round = True
             # click quit button to exit the game
             elif quit_button.rect.collidepoint(x, y):
                 click_sound.play()
@@ -428,9 +426,9 @@ while running:
             elif not show_next_button:
                 for i, pos in enumerate(square_positions):
                     if pos[0] <= x <= pos[0] + square_size and pos[1] <= y <= pos[1] + square_size:
+                        # set highlight pos for draw_screen()
                         highlight_x, highlight_y = pos
                         if square_colors[i] == correct_color:
-                            pygame.draw.rect(screen, "brown", (highlight_x - 10, highlight_y - 10, square_size + 20, square_size + 20),5)    
                             result = "RIGHT !"
                             random.choice(right_sounds).play()
                             show_next_button = True
@@ -438,7 +436,6 @@ while running:
                             if not wrong_answer:
                                 real_score += 1 
                             if question_num >= target_question_num:
-                                # Game over after 10 questions
                                 game_over = True
                             else:
                                 next_button.draw()
